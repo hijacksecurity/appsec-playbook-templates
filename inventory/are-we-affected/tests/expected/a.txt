@@ -1,0 +1,5 @@
+name|tier|impact_tier|owner|oncall|package|image_digest|running_in|internet_facing|indirect|auth
+checkout-api|1|top|checkout-team|#checkout-oncall|pkg:npm/axios@1.14.1|sha256:c0a1|prod-eu/checkout|1|1|any-customer
+checkout-api|1|top|checkout-team|#checkout-oncall|pkg:npm/axios@1.14.1|sha256:c0a1|prod-us/checkout|1|1|any-customer
+storefront-api|1|top|storefront-team|#storefront-oncall|pkg:npm/axios@1.14.1|sha256:5f02|staging/storefront|1|1|anonymous
+ops-dashboard|3|low|internal-tools|#internal-tools|pkg:npm/axios@1.14.1|sha256:0d02|not running|0|0|staff

@@ -1,0 +1,1 @@
+uses: not-a-workflow/should-be-ignored@v1

@@ -1,0 +1,14 @@
+repo	file	action	ref	pinned
+checkout-api	.github/actions/setup/action.yml	actions/setup-node	v4	no
+checkout-api	.github/actions/setup/action.yml	actions/cache	1111111111111111111111111111111111111111	yes
+checkout-api	.github/workflows/ci.yml	actions/checkout	3d3c42e5aac5ba805825da76410c181273ba90b1	yes
+checkout-api	.github/workflows/ci.yml	example-actions/changed-files	v45	no
+checkout-api	.github/workflows/ci.yml	docker://ghcr.io/example/linter	2.1	docker-tag
+checkout-api	.github/workflows/ci.yml	pinecart/shared-workflows/.github/workflows/scan.yml	main	no
+checkout-api	.github/workflows/release.yaml	actions/checkout	3d3c42e	no
+checkout-api	.github/workflows/release.yaml	example-actions/publish	0123456789abcdef0123456789abcdef01234567	yes
+legacy-catalog	.github/workflows/build.yml	actions/checkout	v4	no
+legacy-catalog	.github/workflows/build.yml	docker://alpine	sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef	docker-digest
+legacy-catalog	.github/workflows/build.yml	docker://localhost:5000/tools/builder		docker-tag
+legacy-catalog	.github/workflows/build.yml	example-actions/changed-files		no
+platform-actions	action.yaml	example-actions/scanner	main	no

@@ -1,0 +1,10 @@
+name: build
+on: push
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      -   uses:   actions/checkout@v4    # extra spaces
+      - uses: docker://alpine@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      - uses: docker://localhost:5000/tools/builder
+      - uses: example-actions/changed-files

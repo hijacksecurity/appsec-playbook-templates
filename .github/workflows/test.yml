@@ -16,3 +16,17 @@ jobs:
         run: shellcheck operating-model/exception-register/scripts/*.sh operating-model/exception-register/tests/*.sh
       - name: Valid exceptions pass, invalid ones fail
         run: operating-model/exception-register/tests/run-tests.sh
+  inventory:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Shellcheck
+        run: shellcheck inventory/scripts/*.sh inventory/scripts/tests/*.sh inventory/are-we-affected/tests/*.sh
+      - name: list-actions.sh output matches the expected TSV
+        run: inventory/scripts/tests/run-tests.sh
+      - name: Install sqlite3
+        run: command -v sqlite3 || { sudo apt-get update && sudo apt-get install -y sqlite3; }
+      - name: The are-we-affected queries return the expected rows
+        run: inventory/are-we-affected/tests/run-tests.sh

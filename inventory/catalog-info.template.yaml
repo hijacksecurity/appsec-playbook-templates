@@ -1,0 +1,33 @@
+# catalog-info.yaml: one file at the root of each service repo.
+# It says what the service is, who owns it, and the security facts the program needs.
+#
+# This is a Backstage Component (https://backstage.io/docs/features/software-catalog/descriptor-format).
+# No Backstage? Keep the same file anyway. It is plain YAML, so your inventory script can
+# read it from every repo and get the same owner, tier and exposure values.
+#
+# AppSec usually opens this as a pre-filled pull request with a best-guess owner.
+# The owning team approves it or fixes it.
+# Replace "pinecart.io" with your own domain. Backstage annotation values must be strings,
+# so keep the quotes around numbers and true/false.
+
+apiVersion: backstage.io/v1alpha1             # Backstage's catalog format version; leave as is
+kind: Component                               # a piece of software: a service, website or library
+metadata:
+  name: checkout-api                          # unique name in the catalog; usually the repo name
+  description: Takes payment and places orders # optional, one line
+  annotations:
+    github.com/project-slug: pinecart/checkout-api   # the repo (org/name); links the entity to its code
+
+    # Security annotations. Field names and values match 3.2 and 3.4 of the playbook.
+    pinecart.io/tier: "1"                     # "1" | "2" | "3", from tiering-rubric.md (the worst axis wins)
+    pinecart.io/data-class: payment           # most sensitive data it touches:
+                                              #   payment | credentials | bulk-personal | limited-personal | none
+    pinecart.io/internet-facing: "true"       # "true" if the internet can reach it, directly or behind a gateway
+    pinecart.io/indirect: "true"              # "true" if data from the internet reaches it (uploads, queues, webhooks)
+    pinecart.io/auth: any-customer            # who can reach it: anonymous | any-customer | staff | service
+                                              #   3.4 treats any-customer as a fake mitigator: every customer can log in
+spec:
+  type: service                               # service | website | library
+  lifecycle: production                       # production | experimental | deprecated
+  owner: group:checkout-team                  # the team that gets this service's findings; a team, never a person
+  system: storefront                          # groups related services; optional

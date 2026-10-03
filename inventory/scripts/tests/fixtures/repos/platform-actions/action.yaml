@@ -1,0 +1,7 @@
+name: platform-scan
+description: Composite action published by the platform team
+runs:
+  using: composite
+  steps:
+    - uses: "example-actions/scanner@main"  # branch: not pinned
+    - uses: ./local-step

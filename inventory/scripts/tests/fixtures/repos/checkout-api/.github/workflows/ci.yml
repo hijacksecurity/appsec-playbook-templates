@@ -1,0 +1,19 @@
+name: ci
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Changed files
+        uses: "example-actions/changed-files@v45"
+      - name: Lint in a container
+        uses: docker://ghcr.io/example/linter:2.1
+      # - uses: example-actions/old-thing@v1   (commented out, must be ignored)
+  shared:
+    uses: pinecart/shared-workflows/.github/workflows/scan.yml@main

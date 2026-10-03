@@ -1,0 +1,2 @@
+id|repo|data_class|internet_facing|indirect|auth
+svc:order-history|pinecart/order-history|bulk-personal|0|1|service

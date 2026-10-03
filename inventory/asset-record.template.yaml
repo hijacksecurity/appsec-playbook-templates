@@ -1,0 +1,49 @@
+# The minimum inventory record: one per asset, for every layer.
+# These are the fields that answer "what exists, who owns it, how critical is it,
+# and where is it running?" Add depth later, Tier 1 first.
+# Unknown is a value: write it down in `unknowns`, never leave a silent gap.
+
+asset:
+  id: svc:checkout-api                 # stable ID, never reused (prefix by layer: repo:, svc:, img:, ...)
+  layer: deployed-service              # repo | workflow | action-ref | iac-module | image | deployed-service
+                                       #   | endpoint | saas-app | dev-tool | ai-component
+  name: checkout-api
+  status: active                       # active | dormant | archived | decommissioned
+
+  owner:
+    team: checkout-team                # a team, never a person; checked against the IdP on every sync
+    source: catalog                    # where the answer came from, in order of trust:
+                                       #   catalog | codeowners | deploy-metadata | scm-team | commit-heuristic | default
+    confidence: high                   # high: catalog and CODEOWNERS agree | medium: one explicit source
+                                       #   | low: heuristic only | none: orphan
+    oncall: "#checkout-oncall"         # where findings are routed
+
+  tier: 1                              # 1 | 2 | 3, from tiering-rubric.md
+                                       #   3.4 impact.tier starts at: 1 = top, 2 = middle, 3 = low
+  tier_inputs:                         # the facts behind the tier; the worst axis wins
+    business: revenue-critical         # revenue-critical | publish-or-deploy-rights | customer-facing | internal
+    data_class: payment                # payment | credentials | bulk-personal | limited-personal | none
+    exposure:                          # the same fields as 3.4's `exposed:` block
+      internet_facing: true            # reachable from the internet, directly or behind a gateway
+      indirect: true                   # data from the internet reaches it, even with no public endpoint
+      auth: any-customer               # anonymous | any-customer | staff | service
+
+  links:                               # parent and child assets: repo, then image, then deployment
+    repo: github.com/pinecart/checkout-api
+    images: ["ghcr.io/pinecart/checkout-api@sha256:..."]   # by digest, never by tag
+    deployments: ["prod-eu/checkout", "prod-us/checkout"]  # cluster/namespace or account/region
+    sbom:
+      format: CycloneDX                # store one format, ingest both (CycloneDX and SPDX)
+      spec_version: "1.7"
+      generation_context: post-build   # pre-build | build | post-build (an image scan is post-build)
+      timestamp: "2026-10-14T09:12:00Z"
+
+  posture:                             # repo hygiene, e.g. OpenSSF Scorecard check scores (0-10)
+    scorecard: {Dangerous-Workflow: 10, Token-Permissions: 10, Pinned-Dependencies: 9}
+
+  provenance:                          # what makes freshness measurable; the fields everyone forgets
+    first_seen: "2025-03-02"
+    last_seen: "2026-10-15T08:00:00Z"  # reset by every crawl or event that sees the asset
+    source: webhook+nightly-crawl      # which collector saw it
+
+  unknowns: []                         # explicit gaps, e.g. ["sbom: unknown", "exposure: unknown"]
