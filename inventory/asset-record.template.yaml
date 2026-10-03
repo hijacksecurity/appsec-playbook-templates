@@ -6,7 +6,7 @@
 asset:
   id: svc:checkout-api                 # stable ID, never reused (prefix by layer: repo:, svc:, img:, ...)
   layer: deployed-service              # repo | workflow | action-ref | iac-module | image | deployed-service
-                                       #   | endpoint | saas-app | dev-tool | ai-component
+                                       #   | endpoint | platform-integration | saas-app | dev-tool | ai-component
   name: checkout-api
   status: active                       # active | dormant | archived | decommissioned
 
