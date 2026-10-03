@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local env and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Logs and temp
+*.log
+tmp/

@@ -1,0 +1,34 @@
+# Copy to .github/workflows/exception-expiry.yml in the repo that holds your exceptions/ folder,
+# and copy scripts/check-exceptions.sh next to it (to scripts/check-exceptions.sh).
+name: exception-expiry
+on:
+  schedule:
+    - cron: "0 13 * * 1-5"   # weekdays, 13:00 UTC
+  pull_request:
+    paths: ["exceptions/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write            # only used to open an issue when the scheduled run fails
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check folder, priority, KEV, expiry and maximum duration
+        run: scripts/check-exceptions.sh exceptions "$RUNNER_TEMP/failures.md"
+      # Scheduled runs only notify whoever last edited the cron, so open an issue the owners will see.
+      - name: Open or update an issue for the owners
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          body="$RUNNER_TEMP/failures.md"
+          echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> "$body"
+          title="Exception register: expired or invalid exceptions"
+          num=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [[ -n "$num" ]]; then gh issue comment "$num" --body-file "$body"
+          else gh issue create --title "$title" --body-file "$body"; fi
