@@ -4,6 +4,20 @@ Accepted risks ("exceptions") as YAML files in Git. Every exception has an owner
 compensating control and an expiry date. A check runs on every pull request and every
 weekday, so nothing quietly stays open past its expiry.
 
+## Where it lives and who does what
+
+Put this in **one central repo for the whole company** (for example `security-exceptions`), owned by AppSec. Not in each team's code repo: you get one place to see every accepted risk, and a team can't quietly approve its own exception.
+
+| Who | What they do |
+|---|---|
+| The dev team that needs the exception | Opens a PR that adds one file |
+| The approver for that priority | Reviews the PR and accepts the risk, or says no |
+| AppSec | Confirms the compensating control really works, then approves |
+| The check (GitHub Action) | Runs on every PR and every weekday; blocks bad files, flags expired ones |
+| The owner (one named person) | Fixes the issue before it expires, or renews with a new PR |
+
+When the fix ships, the team opens a PR that deletes the file. In the team's own code repo, the scanner suppression should point back to the exception ID (for example `# EXC-2026-014`), so anyone can find who approved it and when it ends.
+
 ## How it works
 
 1. **One file per exception**, in a folder for its priority: `exceptions/p1/`,
