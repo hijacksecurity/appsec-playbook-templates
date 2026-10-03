@@ -1,0 +1,10 @@
+{
+  "exec-approvers": ["cto"],
+  "ciso-office": ["ciso"],
+  "vp-eng": ["vp", "dual"],
+  "security-leadership": ["head-sec", "dual"],
+  "eng-directors": ["director"],
+  "appsec-leads": ["appsec-lead"],
+  "eng-managers": ["manager"],
+  "appsec": ["appsec-eng"]
+}

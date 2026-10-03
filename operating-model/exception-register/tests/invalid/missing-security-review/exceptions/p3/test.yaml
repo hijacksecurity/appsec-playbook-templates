@@ -1,6 +1,6 @@
 id: TEST
 owner: test.owner
-priority: P1
+priority: P3
 kev: false
 justification: "Fix ships next sprint"
 compensating_control:
@@ -9,6 +9,5 @@ compensating_control:
   verified_by: appsec-oncall
   evidence: "link to test run"
 accepted_by: someone
-security_review: someone
 approved_on: 2099-01-01
 expires: 2099-02-01

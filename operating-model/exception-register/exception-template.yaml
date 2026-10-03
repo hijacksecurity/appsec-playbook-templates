@@ -1,5 +1,7 @@
 # Copy into exceptions/<priority>/EXC-<year>-<number>.yaml and fill in.
 # One file per exception. Adding or renewing one is a pull request.
+# Required for every priority: id, owner, priority, justification, accepted_by, approved_on, expires.
+# P1-P4 also need security_review. P1-P3 also need a verified compensating_control.
 id: EXC-2026-014
 finding_refs: ["DD-48213"]            # finding IDs in your findings system
 asset: checkout-api                   # from your inventory
@@ -9,16 +11,16 @@ kev: false                            # KEV findings can't be excepted at any pr
 summary: "SSRF in image-fetch endpoint; fix needs the shared HTTP client migration"
 requested_by: team-checkout
 owner: jane.doe                       # a person, not a team alias
-justification: "Fix depends on the paved-road HTTP client, shipping in sprint 42"
-compensating_control:
-  type: precondition-removed          # filters (WAF, virtual patch) can't back an exception
+justification: "Fix depends on the paved-road HTTP client, shipping in sprint 42"   # required
+compensating_control:                 # required for P1-P3; optional for P4 and Hygiene
+  type: precondition-removed          # the only allowed type; "filter" (WAF rule, virtual patch) fails the check
   description: "Egress allowlist on checkout-api pods; blocks internal and metadata ranges"
-  verified_by: appsec-oncall
+  verified_by: appsec-oncall          # who tested that the control blocks the exploit
   verified_on: 2026-10-20
   evidence: "link to test run showing the exploit request is blocked"
 risk_statement: "If the egress policy is removed, an attacker can reach internal services"
 accepted_by: vp-eng-commerce          # who accepts the risk (never the security team)
-security_review: head-of-security     # confirms the control works and the approver understands
+security_review: head-of-security     # P1-P4: confirms the control works and the approver understands
 approved_on: 2026-10-20
 expires: 2026-11-19                   # max 30 days for P2
 renewal_count: 0

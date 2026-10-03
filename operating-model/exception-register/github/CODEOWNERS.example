@@ -1,13 +1,18 @@
 # Copy into .github/CODEOWNERS and replace the team names with yours.
 # The last matching pattern wins, so the catch-all goes first.
 # Approvers per priority follow the risk-acceptance policy in The AppSec Program Playbook, 3.1.
+# CODEOWNERS asks the right people to review, but it accepts any ONE listed owner. The
+# "approvals" check (scripts/check-approvals.sh) is what requires one approval from each group.
 /exceptions/                               @your-org/security-leadership
 /exceptions/p1/                            @your-org/exec-approvers @your-org/ciso-office
 /exceptions/p2/                            @your-org/vp-eng @your-org/security-leadership
 /exceptions/p3/                            @your-org/eng-directors @your-org/appsec-leads
 /exceptions/p4/                            @your-org/eng-managers @your-org/appsec
-/exceptions/hygiene/                       @your-org/eng-managers @your-org/appsec
-# Security owns the rules, so nobody can weaken the check in the same PR that relies on it.
+# Hygiene: the engineering manager accepts. AppSec is informed, not an approver.
+/exceptions/hygiene/                       @your-org/eng-managers
+# Security owns the rules, so nobody can weaken the checks in the same PR that relies on them.
 /.github/CODEOWNERS                        @your-org/security-leadership
 /.github/workflows/exception-expiry.yml    @your-org/security-leadership
 /scripts/check-exceptions.sh               @your-org/security-leadership
+/scripts/check-approvals.sh                @your-org/security-leadership
+/approvers.yaml                            @your-org/security-leadership

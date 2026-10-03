@@ -1,0 +1,9 @@
+# Who must approve a change to each priority folder. Use team slugs from your GitHub org.
+# acceptor: the team that accepts the risk (never the security team).
+# security: the team that confirms the control works. "none" means no security approval is needed.
+# The approval check needs one approval from each team, from two different people.
+p1:      {acceptor: exec-approvers, security: ciso-office}
+p2:      {acceptor: vp-eng,         security: security-leadership}
+p3:      {acceptor: eng-directors,  security: appsec-leads}
+p4:      {acceptor: eng-managers,   security: appsec}
+hygiene: {acceptor: eng-managers,   security: none}   # AppSec is informed, not an approver

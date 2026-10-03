@@ -1,24 +1,79 @@
-# Copy to .github/workflows/exception-expiry.yml in the repo that holds your exceptions/ folder,
-# and copy scripts/check-exceptions.sh next to it (to scripts/check-exceptions.sh).
+# Copy to .github/workflows/exception-expiry.yml in the repo that holds your exceptions/ folder.
+# Also copy scripts/check-exceptions.sh, scripts/check-approvals.sh and approvers.yaml (to the repo root).
+# Make "changed-files" and "approvals" required status checks in your branch ruleset.
 name: exception-expiry
 on:
   schedule:
     - cron: "0 13 * * 1-5"   # weekdays, 13:00 UTC
+  # No paths filter: a required check that never runs blocks the PR forever.
   pull_request:
-    paths: ["exceptions/**"]
+  pull_request_review:
+    types: [submitted, dismissed]
   workflow_dispatch:
-permissions:
-  contents: read
+permissions: {}
 jobs:
-  check:
+  # Pull requests: check only the exception files this PR adds or changes, so one expired
+  # file elsewhere doesn't fail other teams' PRs. The scheduled run catches that file.
+  # This job and "approvals" must run on both pull_request and pull_request_review. A skipped
+  # job reports success, so a run that skips them after a review would replace a failed check.
+  changed-files:
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      issues: write            # only used to open an issue when the scheduled run fails
+      pull-requests: read     # list the files in the PR
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Check folder, priority, KEV, expiry and maximum duration
-        run: scripts/check-exceptions.sh exceptions "$RUNNER_TEMP/failures.md"
+        with:
+          persist-credentials: false
+      - name: Check folder, priority, KEV, required fields, control, expiry and maximum duration
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mapfile -t files < <(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" \
+            --jq '.[] | select(.status != "removed") | .filename | select(test("^exceptions/.+\\.ya?ml$"))')
+          if (( ${#files[@]} == 0 )); then echo "No exception files changed."; exit 0; fi
+          scripts/check-exceptions.sh "${files[@]}"
+
+  # Pull requests: one approval from the risk-acceptor team AND one from the security-review
+  # team, for each priority folder the PR touches. CODEOWNERS alone accepts any one owner.
+  approvals:
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      # Run the script and approvers.yaml from the base branch, so a PR can't change its own rules.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Check approvals from both groups
+        env:
+          # The default GITHUB_TOKEN can't read org team membership. Use a GitHub App token or a
+          # fine-grained PAT with org "Members: read" and repo "Pull requests: read".
+          GH_TOKEN: ${{ secrets.EXCEPTION_APPROVALS_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ORG: ${{ github.repository_owner }}
+          APPROVERS_FILE: approvers.yaml
+        run: scripts/check-approvals.sh
+
+  # Weekdays: check every exception and open an issue the owners will see.
+  all-files:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write            # only used to open or update the issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check every exception
+        run: scripts/check-exceptions.sh --report "$RUNNER_TEMP/failures.md" exceptions
       # Scheduled runs only notify whoever last edited the cron, so open an issue the owners will see.
       - name: Open or update an issue for the owners
         if: failure() && github.event_name == 'schedule'
