@@ -35,4 +35,6 @@ are never excepted.
 **Success measures.** Ownership coverage, SLA adherence by priority, exceptions past
 expiry, maturity (SAMM) change. Reported quarterly.
 
-**Sponsor.** <exec sponsor>. **Review.** Yearly, or when the org changes shape.
+**Sponsor.** <exec sponsor>.
+
+**Review.** Yearly, or when the org changes shape.
