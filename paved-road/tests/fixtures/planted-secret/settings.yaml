@@ -1,0 +1,6 @@
+# Fixture: a FAKE secret, planted for the tests. "pinecart_test_" is a made-up format
+# that only the demo rule in security-stages/gitleaks.toml knows. No real service issues it.
+service: storefront-api
+payments:
+  endpoint: https://payments.pinecart.example
+  api_token: pinecart_test_s7q4f83huht2pe6kjydfzmugec2j5x84

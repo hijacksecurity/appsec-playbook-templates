@@ -1,0 +1,2 @@
+# Input for requirements.txt (the test tools). Regenerate with the command in requirements.txt.
+check-jsonschema==0.38.2

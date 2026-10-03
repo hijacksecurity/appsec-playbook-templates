@@ -1,0 +1,4 @@
+# Input for semgrep-requirements.txt. See ../README.md for how to update it.
+# 1.179.0 is newer than the 7-day wait. It's allowed early because it moves PyJWT to a
+# release that fixes published advisories: the security-fix exception in the policy.
+semgrep==1.179.0

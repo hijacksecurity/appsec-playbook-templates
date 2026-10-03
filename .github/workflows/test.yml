@@ -30,3 +30,122 @@ jobs:
         run: command -v sqlite3 || { sudo apt-get update && sudo apt-get install -y sqlite3; }
       - name: The are-we-affected queries return the expected rows
         run: inventory/are-we-affected/tests/run-tests.sh
+  security-stages:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Shellcheck
+        run: shellcheck paved-road/security-stages/scripts/*.sh paved-road/tests/*.sh
+      # Each case runs the composite action on one fixture. continue-on-error lets the job go
+      # on when a case fails as intended; the check step below asserts every outcome.
+      # zizmor suggests GitHub's newer "$/" self-repository syntax, but actionlint 1.7.12
+      # rejects it, so these keep "./" for now.
+      - name: "Case: clean fixture, defaults"
+        id: clean
+        continue-on-error: true
+        uses: ./paved-road/security-stages # zizmor: ignore[self-repository]
+        with:
+          path: paved-road/tests/fixtures/clean
+      - name: "Case: planted secret, defaults (secrets block)"
+        id: secret
+        continue-on-error: true
+        uses: ./paved-road/security-stages # zizmor: ignore[self-repository]
+        with:
+          path: paved-road/tests/fixtures/planted-secret
+      - name: "Case: planted secret, secrets off"
+        id: secret-off
+        continue-on-error: true
+        uses: ./paved-road/security-stages # zizmor: ignore[self-repository]
+        with:
+          path: paved-road/tests/fixtures/planted-secret
+          secrets: "off"
+      - name: "Case: vulnerable dependency, defaults (SCA warns)"
+        id: vuln-warn
+        continue-on-error: true
+        uses: ./paved-road/security-stages # zizmor: ignore[self-repository]
+        with:
+          path: paved-road/tests/fixtures/vulnerable-dependency
+      - name: "Case: vulnerable dependency, SCA set to block"
+        id: vuln-block
+        continue-on-error: true
+        uses: ./paved-road/security-stages # zizmor: ignore[self-repository]
+        with:
+          path: paved-road/tests/fixtures/vulnerable-dependency
+          sca: block
+      - name: "Case: insecure code, defaults (SAST warns)"
+        id: code-warn
+        continue-on-error: true
+        uses: ./paved-road/security-stages # zizmor: ignore[self-repository]
+        with:
+          path: paved-road/tests/fixtures/insecure-code
+      - name: "Case: insecure code, SAST set to block"
+        id: code-block
+        continue-on-error: true
+        uses: ./paved-road/security-stages # zizmor: ignore[self-repository]
+        with:
+          path: paved-road/tests/fixtures/insecure-code
+          sast: block
+      - name: Every case passed or failed as expected, for the right reason
+        env:
+          CLEAN: ${{ steps.clean.outcome }} ${{ steps.clean.outputs.secrets-result }}/${{ steps.clean.outputs.sca-result }}/${{ steps.clean.outputs.sast-result }}
+          SECRET: ${{ steps.secret.outcome }} ${{ steps.secret.outputs.secrets-result }}/${{ steps.secret.outputs.sca-result }}/${{ steps.secret.outputs.sast-result }}
+          SECRET_OFF: ${{ steps.secret-off.outcome }} ${{ steps.secret-off.outputs.secrets-result }}/${{ steps.secret-off.outputs.sca-result }}/${{ steps.secret-off.outputs.sast-result }}
+          VULN_WARN: ${{ steps.vuln-warn.outcome }} ${{ steps.vuln-warn.outputs.secrets-result }}/${{ steps.vuln-warn.outputs.sca-result }}/${{ steps.vuln-warn.outputs.sast-result }}
+          VULN_BLOCK: ${{ steps.vuln-block.outcome }} ${{ steps.vuln-block.outputs.secrets-result }}/${{ steps.vuln-block.outputs.sca-result }}/${{ steps.vuln-block.outputs.sast-result }}
+          CODE_WARN: ${{ steps.code-warn.outcome }} ${{ steps.code-warn.outputs.secrets-result }}/${{ steps.code-warn.outputs.sca-result }}/${{ steps.code-warn.outputs.sast-result }}
+          CODE_BLOCK: ${{ steps.code-block.outcome }} ${{ steps.code-block.outputs.secrets-result }}/${{ steps.code-block.outputs.sca-result }}/${{ steps.code-block.outputs.sast-result }}
+        run: |
+          status=0
+          # expect NAME GOT WANT: GOT and WANT are "outcome secrets/sca/sast".
+          expect() {
+            if [ "$2" = "$3" ]; then echo "PASS $1"; else echo "FAIL $1: got '$2', want '$3'"; status=1; fi
+          }
+          expect clean      "$CLEAN"      "success pass/pass/pass"
+          expect secret     "$SECRET"     "failure findings/pass/pass"
+          expect secret-off "$SECRET_OFF" "success off/pass/pass"
+          expect vuln-warn  "$VULN_WARN"  "success pass/findings/pass"
+          expect vuln-block "$VULN_BLOCK" "failure pass/findings/pass"
+          expect code-warn  "$CODE_WARN"  "success pass/pass/findings"
+          expect code-block "$CODE_BLOCK" "failure pass/pass/findings"
+          exit $status
+      - name: The default semgrep rules match their test cases
+        run: |
+          "$RUNNER_TEMP/paved-road-tools/bin/semgrep" --test --metrics=off --disable-version-check \
+            --config paved-road/security-stages/semgrep-rules/ paved-road/tests/semgrep-rules/
+  workflow-hardening:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Shellcheck
+        run: shellcheck paved-road/workflow-hardening/*.sh paved-road/workflow-hardening/tests/*.sh
+      - name: Install zizmor and actionlint (pinned, checksums verified)
+        run: paved-road/workflow-hardening/install-linters.sh "$RUNNER_TEMP/linters"
+      - name: zizmor flags the insecure fixture and passes the hardened one
+        run: paved-road/workflow-hardening/tests/run-tests.sh "$RUNNER_TEMP/linters"
+      - name: zizmor on this repo's own workflows and examples
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          "$RUNNER_TEMP/linters/bin/zizmor" --format github .github/workflows \
+            paved-road/security-stages/action.yml paved-road/workflow-hardening/workflow-lint.yml
+      - name: actionlint on this repo's own workflows and examples
+        run: |
+          "$RUNNER_TEMP/linters/bin/actionlint" -color .github/workflows/*.yml \
+            paved-road/workflow-hardening/workflow-lint.yml
+  dependency-updates:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - name: Shellcheck
+        run: shellcheck paved-road/dependency-updates/tests/*.sh
+      - name: Renovate and Dependabot configs validate; npm and pnpm settings work
+        run: paved-road/dependency-updates/tests/run-tests.sh

@@ -1,0 +1,17 @@
+# INSECURE ON PURPOSE. A test fixture: zizmor must flag it. Do not copy.
+# Problems: pull_request_target runs with the base repo's secrets and a write token,
+# then checks out and runs the PR author's code; the actions are pinned to tags, not SHAs;
+# and the token can write everything.
+name: label-pr
+on:
+  pull_request_target:
+permissions: write-all
+jobs:
+  build-and-label:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: npm ci && npm test
+      - uses: actions/labeler@v7

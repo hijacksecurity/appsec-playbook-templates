@@ -1,0 +1,16 @@
+# Test fixture: a team workflow that uses the org's paved-road action by branch.
+# zizmor flags it with its default policy and passes it with ../../../../../zizmor.yml.
+name: ci
+on:
+  pull_request:
+permissions: {}
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pinecart/paved-road/security-stages@main

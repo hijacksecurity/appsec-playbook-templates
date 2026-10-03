@@ -1,0 +1,21 @@
+# Copy these settings into pnpm-workspace.yaml at the project root (pnpm 11 and later).
+# A single-package project can have this file too; pnpm reads its settings from here.
+
+# Install only versions published at least 7 days ago. The unit is minutes.
+minimumReleaseAge: 10080
+# Fail instead of quietly falling back to a newer version when nothing is old enough.
+minimumReleaseAgeStrict: true
+# If a security fix is newer than 7 days, list it here, by exact version, until it ages in.
+minimumReleaseAgeExclude: []
+
+# Dependency install scripts run only for packages approved here (true). An unapproved
+# package with an install script fails the install, so nobody misses it.
+strictDepBuilds: true
+allowBuilds: {}
+#  esbuild: true
+
+# Transitive dependencies must come from the registry, not git repos or tarball URLs.
+blockExoticSubdeps: true
+# Fail if a package's publishing gets weaker (for example, it was published with
+# provenance before and this version isn't).
+trustPolicy: no-downgrade

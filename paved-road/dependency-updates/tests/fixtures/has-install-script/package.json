@@ -1,0 +1,8 @@
+{
+  "name": "has-install-script",
+  "version": "1.0.0",
+  "description": "Test fixture: a local package whose postinstall writes a marker file.",
+  "scripts": {
+    "postinstall": "node install.js"
+  }
+}

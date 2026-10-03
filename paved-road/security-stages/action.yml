@@ -1,0 +1,73 @@
+name: Paved-road security stages
+description: >
+  Runs secrets (gitleaks), SCA (osv-scanner) and SAST (semgrep) on the checked-out repo.
+  Each stage is block, warn or off. Tools are installed at pinned versions with checked hashes.
+inputs:
+  path:
+    description: Folder to scan, relative to the workspace.
+    default: "."
+  secrets:
+    description: "Secrets stage (gitleaks): block, warn or off."
+    default: block
+  sca:
+    description: "SCA stage (osv-scanner, lockfiles): block, warn or off."
+    default: warn
+  sast:
+    description: "SAST stage (semgrep): block, warn or off."
+    default: warn
+  gitleaks-config:
+    description: gitleaks config file. Empty means the gitleaks.toml next to this action.
+    default: ""
+  semgrep-config:
+    description: Semgrep rules file or registry ruleset. Empty means the semgrep-rules/default.yml next to this action.
+    default: ""
+outputs:
+  secrets-result:
+    description: pass, findings, error or off
+    value: ${{ steps.run.outputs.secrets-result }}
+  secrets-count:
+    description: Number of secrets found
+    value: ${{ steps.run.outputs.secrets-count }}
+  sca-result:
+    description: pass, findings, error or off
+    value: ${{ steps.run.outputs.sca-result }}
+  sca-count:
+    description: Number of distinct vulnerabilities found
+    value: ${{ steps.run.outputs.sca-count }}
+  sast-result:
+    description: pass, findings, error or off
+    value: ${{ steps.run.outputs.sast-result }}
+  sast-count:
+    description: Number of SAST findings
+    value: ${{ steps.run.outputs.sast-count }}
+runs:
+  using: composite
+  steps:
+    # Inputs go through env, never straight into the script, so they can't inject shell code.
+    - name: Install pinned tools
+      shell: bash
+      env:
+        SECRETS_MODE: ${{ inputs.secrets }}
+        SCA_MODE: ${{ inputs.sca }}
+        SAST_MODE: ${{ inputs.sast }}
+      run: |
+        stages=()
+        [ "$SECRETS_MODE" != off ] && stages+=(secrets)
+        [ "$SCA_MODE" != off ] && stages+=(sca)
+        [ "$SAST_MODE" != off ] && stages+=(sast)
+        if [ ${#stages[@]} -gt 0 ]; then
+          "$GITHUB_ACTION_PATH/scripts/install-tools.sh" "$RUNNER_TEMP/paved-road-tools" "${stages[@]}"
+        fi
+    - name: Run security stages
+      id: run
+      shell: bash
+      env:
+        SCAN_PATH: ${{ inputs.path }}
+        SECRETS_MODE: ${{ inputs.secrets }}
+        SCA_MODE: ${{ inputs.sca }}
+        SAST_MODE: ${{ inputs.sast }}
+        GITLEAKS_CONFIG: ${{ inputs.gitleaks-config }}
+        SEMGREP_CONFIG: ${{ inputs.semgrep-config }}
+      run: |
+        TOOLS_DIR="$RUNNER_TEMP/paved-road-tools" REPORT_DIR="$RUNNER_TEMP/paved-road-reports" \
+          "$GITHUB_ACTION_PATH/scripts/run-stages.sh"

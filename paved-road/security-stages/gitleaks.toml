@@ -1,0 +1,16 @@
+# gitleaks config for the paved-road secrets stage.
+# It keeps all of gitleaks' built-in rules and adds one demo rule.
+
+[extend]
+useDefault = true
+
+# DEMO RULE. "pinecart_test_" tokens are a made-up format for the fictional company in
+# this repo. No real service issues them. The rule exists so the tests can plant a fake
+# secret without using a real provider's format (which GitHub push protection would
+# block, and which would look like a real leak). Delete it, or replace it with rules for
+# your own internal token formats.
+[[rules]]
+id = "pinecart-demo-token"
+description = "Demo rule: made-up Pinecart test token (not a real secret format)"
+regex = '''\bpinecart_test_[a-z0-9]{32}\b'''
+keywords = ["pinecart_test_"]

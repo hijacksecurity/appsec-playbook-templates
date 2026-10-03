@@ -1,0 +1,10 @@
+# zizmor config: copy to .github/zizmor.yml (zizmor finds it there on its own).
+# Third-party actions must be pinned to a full commit SHA. Your own org's paved-road
+# actions may use a branch or tag, so teams get updates without changing their workflows.
+# Replace "pinecart" with your GitHub org. See the README for the trade-off.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "pinecart/*": ref-pin
+        "*": hash-pin

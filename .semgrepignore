@@ -1,0 +1,5 @@
+# Replaces semgrep's default ignore list for this repo. The defaults skip every tests/
+# folder, which would hide the paved-road SAST fixture in paved-road/tests/fixtures/.
+node_modules/
+vendor/
+*.min.js

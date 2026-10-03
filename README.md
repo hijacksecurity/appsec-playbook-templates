@@ -11,6 +11,7 @@ matches a part of the series.
 |---|---|---|
 | [`operating-model/`](operating-model/) | 3.1 Operating Model | Charter template, decision record template, and a working **exception register** (accepted risks with owners and expiry dates, checked automatically) |
 | [`inventory/`](inventory/) | 3.2 See Everything | Tiering rubric, `catalog-info.yaml` and asset record templates, a script that lists every GitHub Action your repos use (and which are unpinned), and **"are we affected?"** SQL queries with sample data |
+| [`paved-road/`](paved-road/) | 3.3 Build the Paved Road | A GitHub Action that runs **secrets, SCA and SAST** stages, each set to block or warn; workflow hardening with zizmor and actionlint; Renovate, Dependabot, npm and pnpm settings that wait 7 days and block install scripts; a block-vs-warn policy; and a one-page threat model |
 
 More folders will follow as the series goes on.
 

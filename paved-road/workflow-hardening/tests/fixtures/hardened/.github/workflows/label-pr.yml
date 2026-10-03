@@ -1,0 +1,26 @@
+# The hardened version of the insecure fixture (../../../insecure/.github/workflows/label-pr.yml).
+# - It runs on pull_request, so PR code gets no secrets and a read-only token, even from forks.
+# - Labeling needs a write token, so it moves out of this workflow. zizmor flags every
+#   pull_request_target workflow; if you keep one, it must never check out or run PR code.
+# - Every action is pinned to a full commit SHA, with the version in a comment.
+# - The job asks only for the permissions it needs, and checkout doesn't keep the token.
+# - A new push cancels the older run (concurrency), and the job has a name. zizmor's
+#   pedantic persona checks both.
+name: build-pr
+on:
+  pull_request:
+permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: npm ci && npm test

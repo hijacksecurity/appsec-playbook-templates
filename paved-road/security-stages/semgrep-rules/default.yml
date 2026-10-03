@@ -1,0 +1,87 @@
+# A small default ruleset for the paved-road SAST stage. Every rule here should be
+# high-signal: if a rule is noisy, fix it or delete it, because noise teaches people to
+# ignore the stage. Test cases live in ../../tests/semgrep-rules/ (run with semgrep --test).
+# To use the Semgrep Registry instead, set the action's semgrep-config input (for example
+# p/default). Registry rulesets are downloaded at run time, so they are not pinned.
+rules:
+  - id: python-subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess with shell=True runs the command through a shell. If any part of it comes
+      from input, that's command injection. Pass a list of arguments without shell=True.
+    metadata:
+      cwe: "CWE-78: OS Command Injection"
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.$FUNC(..., shell=True, ...)
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^(run|call|check_call|check_output|Popen|getoutput|getstatusoutput)$
+
+  - id: python-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: >-
+      eval() or exec() on a value that isn't a fixed string runs whatever code that value
+      holds. Parse the data instead (for example json.loads or ast.literal_eval).
+    metadata:
+      cwe: "CWE-95: Eval Injection"
+    patterns:
+      - pattern-either:
+          - pattern: eval($X, ...)
+          - pattern: exec($X, ...)
+      - pattern-not: eval("...", ...)
+      - pattern-not: exec("...", ...)
+
+  - id: python-yaml-unsafe-load
+    languages: [python]
+    severity: ERROR
+    message: >-
+      yaml.load without a safe loader can build arbitrary Python objects from the input.
+      Use yaml.safe_load.
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    pattern-either:
+      - pattern: yaml.unsafe_load(...)
+      - patterns:
+          - pattern: yaml.load(...)
+          - pattern-not: yaml.load(..., Loader=yaml.SafeLoader, ...)
+          - pattern-not: yaml.load(..., Loader=yaml.CSafeLoader, ...)
+
+  - id: python-pickle-load
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Unpickling runs code chosen by whoever wrote the data. Never unpickle data that could
+      come from outside your service. Use JSON or another data-only format.
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+
+  - id: python-requests-verify-false
+    languages: [python]
+    severity: ERROR
+    message: >-
+      verify=False turns off TLS certificate checks, so anyone on the network path can read
+      and change the traffic. Fix the trust store instead.
+    metadata:
+      cwe: "CWE-295: Improper Certificate Validation"
+    pattern: requests.$METHOD(..., verify=False, ...)
+
+  - id: js-eval
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      eval() or new Function() on a value that isn't a fixed string runs whatever code that
+      value holds. Parse the data instead (for example JSON.parse).
+    metadata:
+      cwe: "CWE-95: Eval Injection"
+    patterns:
+      - pattern-either:
+          - pattern: eval($X)
+          - pattern: new Function(..., $X)
+      - pattern-not: eval("...")
+      - pattern-not: new Function(..., "...")
